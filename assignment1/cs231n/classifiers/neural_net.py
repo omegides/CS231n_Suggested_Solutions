@@ -100,14 +100,15 @@ class TwoLayerNet(object):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        num_train = X.shape[0]
+        # num_train = X.shape[0]
         f = scores - np.max(scores,axis=1,keepdims=True)
         # p = np.exp(f)/np.sum(np.exp(f),axis=1)[:,None]
-        p = np.exp(f)/np.sum(np.exp(f),axis=1,keepdims=True)  # [:,None]
+        p = np.exp(f)/np.sum(np.exp(f),axis=1,keepdims=True)  # (N,C) [:,None]
         
-        loss = np.sum(-np.log(p[np.arange(num_train),[y]]))
         
-        loss /= num_train
+        loss = np.sum(-np.log(p[np.arange(N),[y]]))
+        
+        loss /= N
         loss += reg * (np.sum(W2**2)+np.sum(W1**2))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -120,8 +121,24 @@ class TwoLayerNet(object):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        mask = np.zeros_like(p)
+        mask[np.arange(N),[y]] = -1
 
-        pass
+        dZ2 = (p + mask)/N # (N,C)
+
+        dW2 = h1.T.dot(dZ2) + 2 * reg * W2  # (H,C)
+
+        db2 = np.sum(dZ2, axis=0)  # (C,1)
+        
+        dA1 = W2.dot(dZ2.T)  # (H,N)
+        dZ1 = np.int64(h1 > 0)  # (N,H)
+        dH1 = dA1.T * dZ1  # (N,H)
+        dW1 = X.T.dot(dH1) + 2 * reg * W1  # (D,N)*(N,H)=(D,H)
+        
+        db1 = np.sum(dH1, axis=0)  # (H,1)
+
+        grads = {'W1':dW1,'b1':db1,'W2':dW2,'b2':db2}
+         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
