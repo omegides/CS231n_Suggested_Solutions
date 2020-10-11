@@ -107,10 +107,12 @@ def rmsprop(w, dw, config=None):
     # config['cache'].                                                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    lr, eps = config['learning_rate'], config['epsilon']
+    beta, v = config['decay_rate'], config['cache']
     
-    config['cache'] = config['decay_rate']*config['cache'] + (1-config['decay_rate'])*(dw*dw)
-    next_w = w - config['learning_rate']*dw/(np.sqrt(config['cache']))
-
+    v = beta*v + (1-beta)*(dw*dw)
+    next_w = w - lr*dw/(np.sqrt(v)+eps)
+    config['cache'] = v
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -153,9 +155,22 @@ def adam(w, dw, config=None):
     # using it in any calculations.                                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    m_hat = np.zeros_like(w)
+    v_hat = np.zeros_like(w)
+    
+    beta1, beta2 = config['beta1'],config['beta2']
+    alpha, eps, m, v, t = config['learning_rate'],config['epsilon'],config['m'],config['v'],config['t']
+    t = t + 1
+    next_w = w
+    
+    mt = beta1*m+(1-beta1)*dw
+    vt = beta2*v+(1-beta2)*(dw)**2
+    m_hat = mt/(1-beta1**t)
+    v_hat = vt/(1-beta2**t)
+    next_w = w - alpha * m_hat/(np.sqrt(v_hat)+eps)
+    config['m'] = mt
+    config['v'] = vt
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
